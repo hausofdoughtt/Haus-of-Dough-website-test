@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Cookie, Truck, MapPin, Plus, Minus, X, Heart, Star, Gift, Search } from 'lucide-react';
+import { ShoppingBag, Cookie, Truck, MapPin, Plus, Minus, X, Star, Gift, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -24,7 +24,7 @@ function currency(n) {
   return `TT$${n.toFixed(2)}`;
 }
 
-export default function HausOfDoughPrototype() {
+export default function App() {
   const [cart, setCart] = useState([]);
   const [query, setQuery] = useState('');
   const [activeBox, setActiveBox] = useState(boxes[1]);
@@ -93,7 +93,7 @@ export default function HausOfDoughPrototype() {
             </div>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-600">
-            #cookiesCookies</a>
+            <a href="#cookies">Cookies</a>
             <a href="#boxes">Build a Box</a>
             <a href="#order">Order</a>
           </nav>

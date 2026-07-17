@@ -1,0 +1,168 @@
+import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { ShoppingBag, Cookie, Truck, MapPin, Plus, Minus, X, Heart, Star, Gift, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+
+const cookies = [
+  { id: 'classic-chip', name: 'Classic Chocolate Chip', price: 28, tag: 'Best Seller', desc: 'Golden brown cookie loaded with premium chocolate chunks.', flavor: 'Chocolate', img: '🍪' },
+  { id: 'red-velvet', name: 'Red Velvet Cheesecake', price: 32, tag: 'Premium', desc: 'Soft red velvet cookie with creamy cheesecake-style filling.', flavor: 'Creamy', img: '❤️' },
+  { id: 'biscoff', name: 'Biscoff Cookie Butter', price: 34, tag: 'Signature', desc: 'Rich cookie butter center with a caramelized biscuit crumble.', flavor: 'Caramel', img: '✨' },
+  { id: 'oreo', name: 'Cookies & Cream', price: 30, tag: 'Popular', desc: 'A soft gourmet cookie packed with cookies-and-cream pieces.', flavor: 'Creamy', img: '🖤' },
+  { id: 'double-choc', name: 'Double Chocolate Fudge', price: 32, tag: 'Rich', desc: 'Deep cocoa cookie with molten chocolate pockets.', flavor: 'Chocolate', img: '🍫' },
+  { id: 'strawberry', name: 'Strawberry Shortcake', price: 34, tag: 'Limited', desc: 'Light strawberry notes, vanilla crumble, and a premium soft bite.', flavor: 'Fruity', img: '🍓' }
+];
+
+const boxes = [
+  { id: 'box-4', name: '4 Cookie Box', size: 4, price: 110, desc: 'Perfect sampler for one or a small gift.' },
+  { id: 'box-6', name: '6 Cookie Box', size: 6, price: 160, desc: 'Our most popular personal treat box.' },
+  { id: 'box-8', name: '8 Cookie Box', size: 8, price: 210, desc: 'Ideal for sharing with friends or family.' },
+  { id: 'box-12', name: '12 Cookie Box', size: 12, price: 300, desc: 'Premium party box for events, gifting, or office treats.' }
+];
+
+function currency(n) {
+  return `TT$${n.toFixed(2)}`;
+}
+
+export default function HausOfDoughPrototype() {
+  const [cart, setCart] = useState([]);
+  const [query, setQuery] = useState('');
+  const [activeBox, setActiveBox] = useState(boxes[1]);
+  const [boxSelection, setBoxSelection] = useState({});
+  const [fulfillment, setFulfillment] = useState('Pickup');
+
+  const filteredCookies = useMemo(() => {
+    return cookies.filter(c => `${c.name} ${c.desc} ${c.flavor}`.toLowerCase().includes(query.toLowerCase()));
+  }, [query]);
+
+  const boxCount = Object.values(boxSelection).reduce((a, b) => a + b, 0);
+  const boxComplete = boxCount === activeBox.size;
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  const addCookie = (cookie) => {
+    setCart(prev => {
+      const found = prev.find(i => i.id === cookie.id && i.type === 'cookie');
+      if (found) return prev.map(i => i.id === cookie.id && i.type === 'cookie' ? { ...i, qty: i.qty + 1 } : i);
+      return [...prev, { ...cookie, type: 'cookie', qty: 1 }];
+    });
+  };
+
+  const addBoxCookie = (id, diff) => {
+    setBoxSelection(prev => {
+      const current = prev[id] || 0;
+      const total = Object.values(prev).reduce((a, b) => a + b, 0);
+      if (diff > 0 && total >= activeBox.size) return prev;
+      const next = Math.max(0, current + diff);
+      return { ...prev, [id]: next };
+    });
+  };
+
+  const addBoxToCart = () => {
+    if (!boxComplete) return;
+    const selectionText = cookies
+      .filter(c => boxSelection[c.id])
+      .map(c => `${boxSelection[c.id]} x ${c.name}`)
+      .join(', ');
+    setCart(prev => [...prev, {
+      id: `${activeBox.id}-${Date.now()}`,
+      type: 'box',
+      name: activeBox.name,
+      desc: selectionText,
+      price: activeBox.price,
+      qty: 1,
+      img: '🎁'
+    }]);
+    setBoxSelection({});
+  };
+
+  const updateQty = (cartId, diff) => {
+    setCart(prev => prev.map(item => item.id === cartId ? { ...item, qty: item.qty + diff } : item).filter(item => item.qty > 0));
+  };
+
+  const removeItem = (cartId) => setCart(prev => prev.filter(item => item.id !== cartId));
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-rose-100 text-stone-900">
+      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/75 border-b border-pink-100">
+        <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-2xl bg-pink-200 flex items-center justify-center shadow-sm"><Cookie className="text-pink-700" /></div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">Haus of Dough</h1>
+              <p className="text-xs text-stone-500">Premium gourmet cookies</p>
+            </div>
+          </div>
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-600">
+            #cookiesCookies</a>
+            <a href="#boxes">Build a Box</a>
+            <a href="#order">Order</a>
+          </nav>
+          <Button className="rounded-full bg-stone-900 hover:bg-stone-700 text-white"><ShoppingBag className="mr-2 h-4 w-4" /> Cart {cart.length}</Button>
+        </div>
+      </header>
+
+      <main>
+        <section className="max-w-7xl mx-auto px-5 py-16 grid lg:grid-cols-2 gap-10 items-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6 }}>
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-pink-100 text-sm text-pink-700 font-semibold mb-6">
+              <Star className="h-4 w-4 fill-pink-300" /> Freshly baked, premium, made to order
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tight leading-tight">Gourmet cookies that feel like a luxury treat.</h2>
+            <p className="mt-6 text-lg text-stone-600 max-w-xl">Browse signature cookies, build your own premium box, and place orders for pickup or local delivery.</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button className="rounded-full bg-pink-500 hover:bg-pink-600 text-white px-7 py-6 text-base">Shop Cookies</Button>
+              <Button variant="outline" className="rounded-full border-pink-200 px-7 py-6 text-base">Build a Box</Button>
+            </div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .6 }} className="relative">
+            <div className="rounded-[2.5rem] bg-pink-200/70 p-8 shadow-2xl border border-white">
+              <div className="bg-white rounded-[2rem] p-8 grid grid-cols-2 gap-4">
+                {cookies.slice(0,4).map(c => <div key={c.id} className="rounded-3xl bg-gradient-to-br from-pink-50 to-rose-100 p-5 text-center shadow-sm"><div className="text-5xl mb-3">{c.img}</div><p className="font-bold text-sm">{c.name}</p></div>)}
+              </div>
+            </div>
+          </motion.div>
+        </section>
+
+        <section id="cookies" className="max-w-7xl mx-auto px-5 py-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-7">
+            <div><h3 className="text-3xl font-black">Signature Cookies</h3><p className="text-stone-500 mt-2">Premium flavors customers can add directly to cart.</p></div>
+            <div className="relative max-w-sm w-full"><Search className="absolute left-4 top-3.5 h-4 w-4 text-stone-400" /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search flavors" className="w-full rounded-full border border-pink-100 bg-white px-11 py-3 outline-none focus:ring-2 focus:ring-pink-200" /></div>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredCookies.map(cookie => <Card key={cookie.id} className="rounded-3xl border-pink-100 shadow-sm overflow-hidden"><CardContent className="p-6"><div className="flex justify-between items-start"><div className="text-6xl">{cookie.img}</div><span className="rounded-full bg-pink-100 text-pink-700 px-3 py-1 text-xs font-bold">{cookie.tag}</span></div><h4 className="mt-5 text-xl font-black">{cookie.name}</h4><p className="mt-2 text-sm text-stone-500 min-h-[44px]">{cookie.desc}</p><div className="mt-5 flex items-center justify-between"><span className="font-black text-lg">{currency(cookie.price)}</span><Button onClick={() => addCookie(cookie)} className="rounded-full bg-stone-900 hover:bg-stone-700"><Plus className="h-4 w-4 mr-2" /> Add</Button></div></CardContent></Card>)}
+          </div>
+        </section>
+
+        <section id="boxes" className="max-w-7xl mx-auto px-5 py-14">
+          <div className="rounded-[2rem] bg-white/80 border border-pink-100 shadow-xl p-6 md:p-8">
+            <div className="flex items-center gap-3 mb-6"><div className="h-12 w-12 rounded-2xl bg-pink-100 flex items-center justify-center"><Gift className="text-pink-600" /></div><div><h3 className="text-3xl font-black">Build Your Cookie Box</h3><p className="text-stone-500">Choose a 4, 6, 8, or 12 cookie box, then select the exact flavors inside.</p></div></div>
+            <div className="grid md:grid-cols-4 gap-3 mb-7">{boxes.map(b => <button key={b.id} onClick={() => { setActiveBox(b); setBoxSelection({}); }} className={`rounded-3xl p-5 text-left border transition ${activeBox.id === b.id ? 'bg-pink-500 text-white border-pink-500 shadow-lg' : 'bg-white border-pink-100 hover:border-pink-300'}`}><p className="font-black">{b.name}</p><p className="text-sm opacity-80 mt-1">{currency(b.price)}</p><p className="text-xs opacity-75 mt-2">{b.desc}</p></button>)}</div>
+            <div className="mb-4 flex justify-between items-center"><p className="font-bold">Selected: {boxCount} of {activeBox.size}</p><p className="text-sm text-stone-500">{boxComplete ? 'Box complete, ready to add.' : `${activeBox.size - boxCount} more needed`}</p></div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{cookies.map(c => <div key={c.id} className="rounded-3xl border border-pink-100 bg-pink-50/50 p-4 flex items-center justify-between gap-3"><div className="flex items-center gap-3"><div className="text-3xl">{c.img}</div><div><p className="font-bold text-sm">{c.name}</p><p className="text-xs text-stone-500">{c.flavor}</p></div></div><div className="flex items-center gap-2"><Button size="icon" variant="outline" className="rounded-full" onClick={() => addBoxCookie(c.id, -1)}><Minus className="h-4 w-4" /></Button><span className="w-5 text-center font-bold">{boxSelection[c.id] || 0}</span><Button size="icon" className="rounded-full bg-pink-500 hover:bg-pink-600" onClick={() => addBoxCookie(c.id, 1)}><Plus className="h-4 w-4" /></Button></div></div>)}</div>
+            <Button onClick={addBoxToCart} disabled={!boxComplete} className="mt-7 rounded-full bg-stone-900 hover:bg-stone-700 px-8 py-6 disabled:opacity-40">Add {activeBox.name} to Cart</Button>
+          </div>
+        </section>
+
+        <section id="order" className="max-w-7xl mx-auto px-5 py-12 grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 rounded-[2rem] bg-white border border-pink-100 shadow-sm p-6">
+            <h3 className="text-2xl font-black mb-5">Your Cart</h3>
+            {cart.length === 0 ? <p className="text-stone-500">Your cart is empty. Add cookies or build a box to start an order.</p> : <div className="space-y-4">{cart.map(item => <div key={item.id} className="flex items-start justify-between gap-4 border-b border-pink-50 pb-4"><div className="flex gap-3"><div className="text-3xl">{item.img}</div><div><p className="font-black">{item.name}</p><p className="text-sm text-stone-500 max-w-xl">{item.desc}</p><p className="font-bold mt-1">{currency(item.price)}</p></div></div><div className="flex items-center gap-2"><Button size="icon" variant="outline" className="rounded-full" onClick={() => updateQty(item.id, -1)}><Minus className="h-4 w-4" /></Button><span className="font-bold w-5 text-center">{item.qty}</span><Button size="icon" variant="outline" className="rounded-full" onClick={() => updateQty(item.id, 1)}><Plus className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => removeItem(item.id)}><X className="h-4 w-4" /></Button></div></div>)}</div>}
+          </div>
+          <div className="rounded-[2rem] bg-stone-900 text-white p-6 shadow-xl h-fit">
+            <h3 className="text-2xl font-black">Checkout</h3>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              {['Pickup','Delivery'].map(f => <button key={f} onClick={() => setFulfillment(f)} className={`rounded-2xl px-4 py-3 text-sm font-bold ${fulfillment === f ? 'bg-pink-400 text-stone-900' : 'bg-white/10'}`}>{f === 'Pickup' ? <MapPin className="inline h-4 w-4 mr-1" /> : <Truck className="inline h-4 w-4 mr-1" />}{f}</button>)}
+            </div>
+            <div className="mt-6 space-y-3 text-sm"><div className="flex justify-between"><span>Subtotal</span><span>{currency(subtotal)}</span></div><div className="flex justify-between"><span>{fulfillment}</span><span>{fulfillment === 'Pickup' ? 'Free' : 'Calculated at checkout'}</span></div><div className="border-t border-white/20 pt-3 flex justify-between font-black text-lg"><span>Total</span><span>{currency(subtotal)}</span></div></div>
+            <Button disabled={cart.length === 0} className="w-full mt-6 rounded-full bg-pink-400 hover:bg-pink-300 text-stone-900 py-6 disabled:opacity-40">Place Order</Button>
+            <p className="mt-4 text-xs text-white/60">Prototype note: connect this checkout to Square Online, WooCommerce, or another payment/order platform before launch.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer className="max-w-7xl mx-auto px-5 py-10 text-center text-sm text-stone-500">
+        <p>Made for Haus of Dough with a light pink premium bakery aesthetic. Fresh cookies, curated boxes, pickup and delivery.</p>
+      </footer>
+    </div>
+  );
+}
